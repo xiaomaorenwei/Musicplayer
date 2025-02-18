@@ -130,26 +130,20 @@ Page({
         }
 
         try {
-          // 获取音乐URL
+          // 获取音乐URL：调用封装过的 getMusicUrl 方法
           const songIds = songs.map(song => song.id);
           console.log('请求音乐URL, ids:', songIds);
           
-          const urlRes = await wx.request({
-            url: api.getMusicUrl,
-            method: 'GET',
-            data: { id: songIds.join(',') },
-            header: api.headers
-          });
-
+          const urlRes = await this.getMusicUrl(songIds);
           console.log('音乐URL响应:', urlRes);
 
-          if (!urlRes.data || urlRes.data.code !== 200) {
+          if (!urlRes || urlRes.code !== 200) {
             throw new Error('获取音乐URL失败');
           }
 
           // 整合数据
           const searchResults = songs.map(song => {
-            const urlInfo = urlRes.data.data.find(u => u.id === song.id);
+            const urlInfo = urlRes.data.find(u => u.id === song.id);
             return {
               id: song.id,
               name: song.name,
