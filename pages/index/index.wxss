@@ -2,6 +2,7 @@
   padding: 0;
   background: #f5f7fa;
   min-height: 100vh;
+  padding-bottom: 120rpx;
 }
 
 .header {
@@ -116,4 +117,74 @@
 
 .recommend-section {
   margin-top: 30rpx;
+}
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 30rpx;
+  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.song-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.mini-cover {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+
+.mini-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.mini-name {
+  font-size: 28rpx;
+  color: #333;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-artist {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.control-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-btn {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.control-btn image {
+  width: 100%;
+  height: 100%;
 }

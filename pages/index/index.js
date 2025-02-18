@@ -30,7 +30,11 @@ Page({
     searchResults: [], // 存储搜索结果
     searchKeyword: '', // 搜索关键词
     showSearchResults: false, // 是否显示搜索结果
-    isLoading: false
+    isLoading: false,
+    currentSong: null,  // 当前播放的歌曲
+    isPlaying: false,   // 是否正在播放
+    playList: [],       // 播放列表
+    currentIndex: -1    // 当前播放歌曲的索引
   },
 
   onLoad: function() {
@@ -39,6 +43,41 @@ Page({
     // 从本地存储加载收藏列表
     const favorites = wx.getStorageSync('favoriteMusic') || [];
     this.setData({ favoriteList: favorites });
+    
+    // 初始化音频管理器事件监听
+    this.initAudioManagerListener();
+  },
+
+  initAudioManagerListener: function() {
+    // 播放状态监听
+    this.audioManager.onPlay(() => {
+      this.setData({ isPlaying: true });
+      console.log('开始播放');
+    });
+
+    this.audioManager.onPause(() => {
+      this.setData({ isPlaying: false });
+      console.log('暂停播放');
+    });
+
+    this.audioManager.onStop(() => {
+      this.setData({ isPlaying: false });
+      console.log('停止播放');
+    });
+
+    this.audioManager.onEnded(() => {
+      this.playNext();
+      console.log('播放结束，自动播放下一首');
+    });
+
+    this.audioManager.onError((err) => {
+      console.error('播放错误', err);
+      wx.showToast({
+        title: '播放出错，自动播放下一首',
+        icon: 'none'
+      });
+      this.playNext();
+    });
   },
 
   // 搜索音乐
@@ -52,33 +91,39 @@ Page({
       showSearchResults: true 
     });
 
-    // 使用 cloudsearch 接口搜索
+    // 调用网易云搜索接口
     wx.request({
       url: api.searchMusic,
       data: {
         keywords: keyword,
-        limit: 20,
-        type: 1
+        limit: 30,    // 返回数量
+        type: 1,      // 1: 单曲, 10: 专辑, 100: 歌手, 1000: 歌单
+        offset: 0     // 分页偏移量
       },
       success: async (res) => {
-        if (res.data && res.data.result && res.data.result.songs) {
+        console.log('搜索结果：', res.data);
+        if (res.data?.result?.songs) {
           const songs = res.data.result.songs;
           
           try {
             // 获取音乐URL
-            const urlRes = await this.getMusicUrl(songs.map(song => song.id).join(','));
-            
-            // 整合数据（cloudsearch 已经包含了详细信息，不需要额外请求详情）
+            const urlRes = await this.getMusicUrl(songs.map(song => song.id));
+            console.log('音乐URL：', urlRes);
+
+            // 整合数据
             const searchResults = songs.map(song => {
               const urlInfo = urlRes.data.find(u => u.id === song.id);
               return {
                 id: song.id,
                 name: song.name,
-                artist: song.ar[0].name,
-                cover: song.al.picUrl,
-                src: urlInfo?.url || ''
+                artist: song.ar[0].name,  // ar 是歌手信息数组
+                cover: song.al.picUrl,    // al 是专辑信息
+                src: urlInfo?.url || '',
+                fee: song.fee,            // 版权信息 0: 免费, 1: VIP
+                duration: song.dt,        // 歌曲时长(毫秒)
+                album: song.al.name       // 专辑名称
               };
-            }).filter(song => song.src); // 只保留有效的音乐链接
+            }).filter(song => song.src);  // 过滤掉没有音源的歌曲
 
             this.setData({
               searchResults,
@@ -87,7 +132,7 @@ Page({
 
             if (searchResults.length === 0) {
               wx.showToast({
-                title: '未找到可播放的音乐',
+                title: '暂无可播放的音乐',
                 icon: 'none'
               });
             }
@@ -99,15 +144,6 @@ Page({
               icon: 'none'
             });
           }
-        } else {
-          this.setData({ 
-            searchResults: [],
-            isLoading: false 
-          });
-          wx.showToast({
-            title: '未找到相关音乐',
-            icon: 'none'
-          });
         }
       },
       fail: (err) => {
@@ -121,14 +157,15 @@ Page({
     });
   },
 
-  // 获取音乐URL（简化版本）
+  // 获取音乐URL
   getMusicUrl: function(ids) {
     return new Promise((resolve, reject) => {
       wx.request({
         url: api.getMusicUrl,
         data: { 
-          id: ids,
-          br: 320000 // 获取较高音质
+          id: typeof ids === 'object' ? ids.join(',') : ids,
+          level: 'standard',  // standard, higher, exhigh, lossless, hires
+          cookie: api.cookie  // 用于获取 VIP 歌曲
         },
         success: (res) => {
           if (res.data && res.data.code === 200) {
@@ -170,32 +207,83 @@ Page({
     return this.data.favoriteList.some(item => item.id === musicId);
   },
 
-  // 修改播放功能以支持搜索结果的播放
+  // 修改播放功能
   playMusic: function(e) {
     const musicId = e.currentTarget.dataset.id;
-    const music = this.data.musicList.find(item => item.id === musicId) ||
-                 this.data.searchResults.find(item => item.id === musicId) ||
-                 this.data.favoriteList.find(item => item.id === musicId);
+    let playlist;
     
-    if (!music) return;
+    // 确定播放列表来源
+    if (this.data.showSearchResults && this.data.searchResults.length > 0) {
+      playlist = this.data.searchResults;
+    } else if (this.data.favoriteList.length > 0) {
+      playlist = this.data.favoriteList;
+    } else {
+      playlist = this.data.musicList;
+    }
+
+    const currentIndex = playlist.findIndex(item => item.id === musicId);
+    if (currentIndex === -1) return;
+
+    const music = playlist[currentIndex];
     
-    // 设置音频信息
+    // 更新播放列表和当前索引
+    this.setData({
+      playList: playlist,
+      currentIndex: currentIndex,
+      currentSong: music
+    });
+
+    // 设置音频信息并播放
     this.audioManager.title = music.name;
     this.audioManager.singer = music.artist;
     this.audioManager.coverImgUrl = music.cover;
     this.audioManager.src = music.src;
+  },
+
+  // 播放/暂停切换
+  togglePlay: function() {
+    if (this.data.isPlaying) {
+      this.audioManager.pause();
+    } else {
+      this.audioManager.play();
+    }
+  },
+
+  // 播放上一首
+  playPrev: function() {
+    if (this.data.currentIndex <= 0) {
+      // 如果是第一首，则循环到最后一首
+      this.setData({ currentIndex: this.data.playList.length - 1 });
+    } else {
+      this.setData({ currentIndex: this.data.currentIndex - 1 });
+    }
     
-    // 监听播放状态
-    this.audioManager.onPlay(() => {
-      console.log('开始播放');
-    });
+    const music = this.data.playList[this.data.currentIndex];
+    if (music) {
+      this.setData({ currentSong: music });
+      this.audioManager.title = music.name;
+      this.audioManager.singer = music.artist;
+      this.audioManager.coverImgUrl = music.cover;
+      this.audioManager.src = music.src;
+    }
+  },
+
+  // 播放下一首
+  playNext: function() {
+    if (this.data.currentIndex >= this.data.playList.length - 1) {
+      // 如果是最后一首，则循环到第一首
+      this.setData({ currentIndex: 0 });
+    } else {
+      this.setData({ currentIndex: this.data.currentIndex + 1 });
+    }
     
-    this.audioManager.onError((err) => {
-      console.error('播放错误', err);
-      wx.showToast({
-        title: '播放出错，请稍后重试',
-        icon: 'none'
-      });
-    });
+    const music = this.data.playList[this.data.currentIndex];
+    if (music) {
+      this.setData({ currentSong: music });
+      this.audioManager.title = music.name;
+      this.audioManager.singer = music.artist;
+      this.audioManager.coverImgUrl = music.cover;
+      this.audioManager.src = music.src;
+    }
   }
 })

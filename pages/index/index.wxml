@@ -73,4 +73,26 @@
       </view>
     </view>
   </view>
+
+  <!-- 播放控制栏 -->
+  <view class="player-bar" wx:if="{{currentSong}}">
+    <view class="song-info">
+      <image class="mini-cover" src="{{currentSong.cover}}" mode="aspectFill"/>
+      <view class="mini-info">
+        <text class="mini-name">{{currentSong.name}}</text>
+        <text class="mini-artist">{{currentSong.artist}}</text>
+      </view>
+    </view>
+    <view class="controls">
+      <view class="control-btn" bindtap="playPrev">
+        <image src="/images/prev.png" mode="aspectFit"/>
+      </view>
+      <view class="control-btn play-btn" bindtap="togglePlay">
+        <image src="{{isPlaying ? '/images/pause.png' : '/images/play.png'}}" mode="aspectFit"/>
+      </view>
+      <view class="control-btn" bindtap="playNext">
+        <image src="/images/next.png" mode="aspectFit"/>
+      </view>
+    </view>
+  </view>
 </view>
