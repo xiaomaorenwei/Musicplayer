@@ -1,0 +1,57 @@
+<view class="container {{playing ? 'playing' : ''}}">
+  <view class="background-gradient"></view>
+  
+  <view class="player">
+    <!-- 返回按钮 -->
+    <view class="back-button" bindtap="goBack">
+      <image src="/images/back.png" mode="aspectFit"/>
+    </view>
+
+    <!-- 封面图片 -->
+    <view class="cover-container">
+      <image class="cover-image {{playing ? 'rotating' : ''}}" 
+             src="{{musicInfo.cover || '/images/default-cover.png'}}" 
+             mode="aspectFill"/>
+      <view class="cover-ring"></view>
+    </view>
+    
+    <!-- 音乐信息 -->
+    <view class="info-container">
+      <text class="music-name">{{musicInfo.name}}</text>
+      <text class="music-artist">{{musicInfo.artist}}</text>
+    </view>
+    
+    <!-- 进度条 -->
+    <view class="progress-bar">
+      <slider activeColor="#3498db" 
+              backgroundColor="rgba(255,255,255,0.2)" 
+              block-color="#fff"
+              value="{{progress}}" 
+              bindchange="onSliderChange"/>
+      <view class="time-info">
+        <text>{{currentTime}}</text>
+        <text>{{duration}}</text>
+      </view>
+    </view>
+    
+    <!-- 控制按钮 -->
+    <view class="controls">
+      <view class="control-btn" bindtap="previousSong">
+        <image src="/images/previous.png" mode="aspectFit"/>
+      </view>
+      <view class="play-btn {{playing ? 'playing' : ''}}" bindtap="togglePlay">
+        <image src="{{playing ? '/images/pause.png' : '/images/play.png'}}" mode="aspectFit"/>
+      </view>
+      <view class="control-btn" bindtap="nextSong">
+        <image src="/images/next.png" mode="aspectFit"/>
+      </view>
+    </view>
+    
+    <!-- 额外控制 -->
+    <view class="extra-controls">
+      <image class="small-icon" src="/images/shuffle.png" mode="aspectFit"/>
+      <image class="small-icon" src="/images/repeat.png" mode="aspectFit"/>
+      <image class="small-icon" src="/images/playlist.png" mode="aspectFit"/>
+    </view>
+  </view>
+</view>

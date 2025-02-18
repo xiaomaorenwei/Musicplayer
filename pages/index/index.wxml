@@ -1,0 +1,17 @@
+<view class="container">
+  <view class="header">
+    <text class="title">我的音乐</text>
+  </view>
+  <view class="music-list">
+    <view class="music-item" wx:for="{{musicList}}" wx:key="id" bindtap="playMusic" data-id="{{item.id}}">
+      <image class="music-cover" src="{{item.cover || '/images/default-cover.png'}}" mode="aspectFill"/>
+      <view class="music-info">
+        <text class="music-name">{{item.name}}</text>
+        <text class="music-artist">{{item.artist}}</text>
+      </view>
+      <view class="play-icon">
+        <image src="/images/play-circle.png" mode="aspectFit"/>
+      </view>
+    </view>
+  </view>
+</view>
