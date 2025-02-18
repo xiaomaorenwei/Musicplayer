@@ -1,16 +1,75 @@
 <view class="container">
   <view class="header">
     <text class="title">我的音乐</text>
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="搜索音乐" 
+        bindinput="onSearch"
+        value="{{searchKeyword}}"
+      />
+    </view>
   </view>
-  <view class="music-list">
-    <view class="music-item" wx:for="{{musicList}}" wx:key="id" bindtap="playMusic" data-id="{{item.id}}">
-      <image class="music-cover" src="{{item.cover}}" mode="aspectFill"></image>
-      <view class="music-info">
-        <text class="music-name">{{item.name}}</text>
-        <text class="music-artist">{{item.artist}}</text>
+
+  <!-- 搜索结果 -->
+  <view class="search-results" wx:if="{{showSearchResults}}">
+    <view class="section-title">搜索结果</view>
+    <view class="music-list">
+      <view wx:if="{{isLoading}}" class="loading">搜索中...</view>
+      <view 
+        class="music-item" 
+        wx:for="{{searchResults}}" 
+        wx:key="id" 
+      >
+        <image class="music-cover" src="{{item.cover}}" mode="aspectFill"></image>
+        <view class="music-info" bindtap="playMusic" data-id="{{item.id}}">
+          <text class="music-name">{{item.name}}</text>
+          <text class="music-artist">{{item.artist}}</text>
+        </view>
+        <view class="favorite-icon" bindtap="toggleFavorite" data-id="{{item.id}}">
+          <image src="/images/{{isFavorite(item.id) ? 'heart-filled.png' : 'heart.png'}}" mode="aspectFit"/>
+        </view>
       </view>
-      <view class="play-icon">
-        <image src="/images/play-circle.png" mode="aspectFit"/>
+    </view>
+  </view>
+
+  <!-- 我喜欢的音乐 -->
+  <view class="favorite-section" wx:if="{{favoriteList.length > 0}}">
+    <view class="section-title">我喜欢的音乐</view>
+    <view class="music-list">
+      <view 
+        class="music-item" 
+        wx:for="{{favoriteList}}" 
+        wx:key="id" 
+      >
+        <image class="music-cover" src="{{item.cover}}" mode="aspectFill"></image>
+        <view class="music-info" bindtap="playMusic" data-id="{{item.id}}">
+          <text class="music-name">{{item.name}}</text>
+          <text class="music-artist">{{item.artist}}</text>
+        </view>
+        <view class="favorite-icon" bindtap="toggleFavorite" data-id="{{item.id}}">
+          <image src="/images/heart-filled.png" mode="aspectFit"/>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 推荐音乐列表 -->
+  <view class="recommend-section">
+    <view class="section-title">推荐音乐</view>
+    <view class="music-list">
+      <view class="music-item" wx:for="{{musicList}}" wx:key="id" bindtap="playMusic" data-id="{{item.id}}">
+        <image class="music-cover" src="{{item.cover}}" mode="aspectFill"></image>
+        <view class="music-info">
+          <text class="music-name">{{item.name}}</text>
+          <text class="music-artist">{{item.artist}}</text>
+        </view>
+        <view class="play-icon">
+          <image src="/images/play-circle.png" mode="aspectFit"/>
+        </view>
+        <view class="favorite-icon" bindtap="toggleFavorite" data-id="{{item.id}}">
+          <image src="/images/{{isFavorite(item.id) ? 'heart-filled.png' : 'heart.png'}}" mode="aspectFit"/>
+        </view>
       </view>
     </view>
   </view>

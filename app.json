@@ -11,5 +11,12 @@
   },
   "requiredBackgroundModes": ["audio"],
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": false
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  }
 }
