@@ -91,66 +91,102 @@ Page({
       showSearchResults: true 
     });
 
-    // 调用网易云搜索接口
+    // 添加详细的日志
+    console.log('开始搜索:', keyword);
+
     wx.request({
       url: api.searchMusic,
+      method: 'GET',
       data: {
         keywords: keyword,
-        limit: 30,    // 返回数量
-        type: 1,      // 1: 单曲, 10: 专辑, 100: 歌手, 1000: 歌单
-        offset: 0     // 分页偏移量
+        limit: 30,
+        type: 1
       },
+      header: api.headers,
       success: async (res) => {
-        console.log('搜索结果：', res.data);
-        if (res.data?.result?.songs) {
-          const songs = res.data.result.songs;
+        console.log('搜索响应:', res);
+        
+        if (!res.data || res.data.code !== 200) {
+          console.error('搜索接口返回错误:', res);
+          wx.showToast({
+            title: '搜索服务异常',
+            icon: 'none'
+          });
+          this.setData({ isLoading: false });
+          return;
+        }
+
+        const songs = res.data.result.songs;
+        if (!songs || !songs.length) {
+          this.setData({ 
+            searchResults: [],
+            isLoading: false 
+          });
+          wx.showToast({
+            title: '未找到相关歌曲',
+            icon: 'none'
+          });
+          return;
+        }
+
+        try {
+          // 获取音乐URL
+          const songIds = songs.map(song => song.id);
+          console.log('请求音乐URL, ids:', songIds);
           
-          try {
-            // 获取音乐URL
-            const urlRes = await this.getMusicUrl(songs.map(song => song.id));
-            console.log('音乐URL：', urlRes);
+          const urlRes = await wx.request({
+            url: api.getMusicUrl,
+            method: 'GET',
+            data: { id: songIds.join(',') },
+            header: api.headers
+          });
 
-            // 整合数据
-            const searchResults = songs.map(song => {
-              const urlInfo = urlRes.data.find(u => u.id === song.id);
-              return {
-                id: song.id,
-                name: song.name,
-                artist: song.ar[0].name,  // ar 是歌手信息数组
-                cover: song.al.picUrl,    // al 是专辑信息
-                src: urlInfo?.url || '',
-                fee: song.fee,            // 版权信息 0: 免费, 1: VIP
-                duration: song.dt,        // 歌曲时长(毫秒)
-                album: song.al.name       // 专辑名称
-              };
-            }).filter(song => song.src);  // 过滤掉没有音源的歌曲
+          console.log('音乐URL响应:', urlRes);
 
-            this.setData({
-              searchResults,
-              isLoading: false
-            });
+          if (!urlRes.data || urlRes.data.code !== 200) {
+            throw new Error('获取音乐URL失败');
+          }
 
-            if (searchResults.length === 0) {
-              wx.showToast({
-                title: '暂无可播放的音乐',
-                icon: 'none'
-              });
-            }
-          } catch (err) {
-            console.error('获取音乐信息失败', err);
-            this.setData({ isLoading: false });
+          // 整合数据
+          const searchResults = songs.map(song => {
+            const urlInfo = urlRes.data.data.find(u => u.id === song.id);
+            return {
+              id: song.id,
+              name: song.name,
+              artist: song.artists[0].name,
+              cover: song.album.picUrl,
+              src: urlInfo?.url || '',
+              album: song.album.name
+            };
+          }).filter(song => song.src); // 只保留有URL的歌曲
+
+          console.log('整合后的结果:', searchResults);
+
+          this.setData({
+            searchResults,
+            isLoading: false
+          });
+
+          if (searchResults.length === 0) {
             wx.showToast({
-              title: '获取音乐信息失败',
+              title: '暂无可播放的歌曲',
               icon: 'none'
             });
           }
+        } catch (err) {
+          console.error('处理搜索结果失败:', err);
+          this.setData({ isLoading: false });
+          wx.showToast({
+            title: '获取歌曲信息失败',
+            icon: 'none'
+          });
         }
       },
       fail: (err) => {
-        console.error('搜索失败', err);
+        console.error('搜索请求失败:', err);
         this.setData({ isLoading: false });
         wx.showToast({
-          title: '搜索失败，请重试',
+          title: '搜索失败，请检查网络',
           icon: 'none'
         });
       }

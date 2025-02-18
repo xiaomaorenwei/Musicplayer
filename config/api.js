@@ -1,12 +1,15 @@
-const BASE_URL = 'https://netease-cloud-music-api-rust.vercel.app'; // 更换为更稳定的API地址
+const BASE_URL = 'https://service-irzuinkk-1320869466.cd.apigw.tencentcs.com/release';
 
 export default {
-  // 搜索音乐 (使用 cloudsearch 而不是 search，因为返回结果更完整)
-  searchMusic: `${BASE_URL}/cloudsearch`,
-  // 获取音乐URL (使用 v1 版本，支持 VIP 音乐试听)
-  getMusicUrl: `${BASE_URL}/song/url/v1`,
-  // 获取音乐详情 (获取更多音乐信息，如歌词等)
+  // 搜索音乐
+  searchMusic: `${BASE_URL}/search`,
+  // 获取音乐URL
+  getMusicUrl: `${BASE_URL}/song/url`,
+  // 获取音乐详情
   getMusicDetail: `${BASE_URL}/song/detail`,
-  // cookie用于访问VIP内容
-  cookie: ''
+  // 添加请求头，避免被限制
+  headers: {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+  }
 }; 
