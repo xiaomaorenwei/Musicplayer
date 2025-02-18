@@ -3,24 +3,24 @@ Page({
     musicList: [
       {
         id: 1,
-        name: "Ocean Blue",
-        artist: "Wave Masters",
-        src: "你的音频地址",
-        cover: "你的封面图片地址"
+        name: 'A New Beginning',
+        artist: 'Bensound',
+        cover: 'https://www.bensound.com/bensound-img/acousticbreeze.jpg',
+        src: 'https://www.bensound.com/bensound-music/bensound-anewbeginning.mp3'
       },
       {
         id: 2,
-        name: "Deep Waters",
-        artist: "The Currents",
-        src: "你的音频地址",
-        cover: "你的封面图片地址"
+        name: 'Creative Minds',
+        artist: 'Bensound',
+        cover: 'https://www.bensound.com/bensound-img/creativeminds.jpg',
+        src: 'https://www.bensound.com/bensound-music/bensound-creativeminds.mp3'
       },
       {
         id: 3,
-        name: "Azure Dreams",
-        artist: "Sky Collective",
-        src: "你的音频地址",
-        cover: "你的封面图片地址"
+        name: 'Happy Rock',
+        artist: 'Bensound',
+        cover: 'https://www.bensound.com/bensound-img/happyrock.jpg',
+        src: 'https://www.bensound.com/bensound-music/bensound-happyrock.mp3'
       }
     ]
   },
