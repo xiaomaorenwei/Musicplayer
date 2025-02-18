@@ -52,79 +52,91 @@ Page({
       showSearchResults: true 
     });
 
-    // 调用网易云音乐搜索API
+    // 使用 cloudsearch 接口搜索
     wx.request({
       url: api.searchMusic,
       data: {
         keywords: keyword,
-        limit: 20,  // 限制返回数量
-        type: 1     // 1: 单曲
+        limit: 20,
+        type: 1
       },
       success: async (res) => {
         if (res.data && res.data.result && res.data.result.songs) {
-          // 获取搜索到的歌曲列表
           const songs = res.data.result.songs;
           
-          // 获取歌曲详情（包含封面等信息）
-          const songIds = songs.map(song => song.id).join(',');
-          const detailRes = await this.getMusicDetail(songIds);
-          
-          // 获取音乐URL
-          const urlRes = await this.getMusicUrl(songIds);
-          
-          // 整合数据
-          const searchResults = songs.map(song => {
-            const detail = detailRes.songs.find(d => d.id === song.id);
-            const urlInfo = urlRes.data.find(u => u.id === song.id);
+          try {
+            // 获取音乐URL
+            const urlRes = await this.getMusicUrl(songs.map(song => song.id).join(','));
             
-            return {
-              id: song.id,
-              name: song.name,
-              artist: song.artists[0].name,
-              cover: detail?.al?.picUrl || '',
-              src: urlInfo?.url || ''
-            };
-          });
+            // 整合数据（cloudsearch 已经包含了详细信息，不需要额外请求详情）
+            const searchResults = songs.map(song => {
+              const urlInfo = urlRes.data.find(u => u.id === song.id);
+              return {
+                id: song.id,
+                name: song.name,
+                artist: song.ar[0].name,
+                cover: song.al.picUrl,
+                src: urlInfo?.url || ''
+              };
+            }).filter(song => song.src); // 只保留有效的音乐链接
 
-          this.setData({
-            searchResults,
-            isLoading: false
+            this.setData({
+              searchResults,
+              isLoading: false
+            });
+
+            if (searchResults.length === 0) {
+              wx.showToast({
+                title: '未找到可播放的音乐',
+                icon: 'none'
+              });
+            }
+          } catch (err) {
+            console.error('获取音乐信息失败', err);
+            this.setData({ isLoading: false });
+            wx.showToast({
+              title: '获取音乐信息失败',
+              icon: 'none'
+            });
+          }
+        } else {
+          this.setData({ 
+            searchResults: [],
+            isLoading: false 
+          });
+          wx.showToast({
+            title: '未找到相关音乐',
+            icon: 'none'
           });
         }
       },
       fail: (err) => {
         console.error('搜索失败', err);
+        this.setData({ isLoading: false });
         wx.showToast({
           title: '搜索失败，请重试',
           icon: 'none'
         });
-        this.setData({ isLoading: false });
       }
     });
   },
 
-  // 获取音乐详情
-  getMusicDetail: function(ids) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: api.getMusicDetail,
-        data: { ids },
-        success: (res) => resolve(res.data),
-        fail: reject
-      });
-    });
-  },
-
-  // 获取音乐URL
-  getMusicUrl: function(id) {
+  // 获取音乐URL（简化版本）
+  getMusicUrl: function(ids) {
     return new Promise((resolve, reject) => {
       wx.request({
         url: api.getMusicUrl,
-        data: {
-          id,
-          level: 'standard' // 标准音质
+        data: { 
+          id: ids,
+          br: 320000 // 获取较高音质
         },
-        success: (res) => resolve(res.data),
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            resolve(res.data);
+          } else {
+            reject(new Error('获取音乐URL失败'));
+          }
+        },
         fail: reject
       });
     });
