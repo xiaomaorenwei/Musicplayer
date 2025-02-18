@@ -18,7 +18,8 @@
 }
 
 .music-list {
-  padding: 0 30rpx;
+  width: 100%;
+  padding: 20rpx;
 }
 
 .music-item {
@@ -26,10 +27,8 @@
   align-items: center;
   padding: 20rpx;
   margin-bottom: 20rpx;
-  background: white;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
+  background: #fff;
+  border-radius: 10rpx;
 }
 
 .music-item:active {
@@ -39,7 +38,7 @@
 .music-cover {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 16rpx;
+  border-radius: 10rpx;
   margin-right: 20rpx;
 }
 
@@ -49,15 +48,15 @@
 
 .music-name {
   font-size: 32rpx;
-  font-weight: 600;
-  color: var(--text-color);
+  color: #333;
   display: block;
-  margin-bottom: 8rpx;
 }
 
 .music-artist {
-  font-size: 26rpx;
-  color: var(--light-text);
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-top: 10rpx;
 }
 
 .play-icon {

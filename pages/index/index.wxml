@@ -4,7 +4,7 @@
   </view>
   <view class="music-list">
     <view class="music-item" wx:for="{{musicList}}" wx:key="id" bindtap="playMusic" data-id="{{item.id}}">
-      <image class="music-cover" src="{{item.cover || '/images/default-cover.png'}}" mode="aspectFill"/>
+      <image class="music-cover" src="{{item.cover}}" mode="aspectFill"></image>
       <view class="music-info">
         <text class="music-name">{{item.name}}</text>
         <text class="music-artist">{{item.artist}}</text>
